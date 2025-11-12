@@ -53,10 +53,10 @@ jobs:
         working-directory: .
         run: terraform init -input=false
 
-      - name: Terraform validate & fmt
+      - name: Terraform fmt & validate
         working-directory: .
         run: |
-          terraform fmt -check
+          terraform fmt -recursive
           terraform validate
 
       - name: Terraform plan (save plan)
