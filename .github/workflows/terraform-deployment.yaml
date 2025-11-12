@@ -77,23 +77,22 @@ jobs:
     name: Terraform — apply (manual approval recommended)
     runs-on: ubuntu-latest
     needs: terraform-plan
-    # recommended: use an environment that requires approvals in repo settings
     environment:
       name: production
-      url: https://console.cloud.google.com/compute/ # optional
+      url: https://console.cloud.google.com/compute/
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download plan artifact
         uses: actions/download-artifact@v4
         with:
           name: tfplan
-          path: ./plan_artifact
-
-      - name: Checkout
-        uses: actions/checkout@v4
+          path: .
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
@@ -102,17 +101,11 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Terraform init (again)
-        working-directory: .
+      - name: Terraform init
         run: terraform init -input=false
 
       - name: Terraform apply (using saved plan)
-        working-directory: .
-        run: |
-          # apply the binary plan file uploaded by the plan job
-          terraform apply -input=false -auto-approve ./plan_artifact/tfplan
+        run: terraform apply -input=false -auto-approve tfplan
 
       - name: Output instance info
-        working-directory: .
-        run: |
-          terraform output -json || true
+        run: terraform output -json || true
